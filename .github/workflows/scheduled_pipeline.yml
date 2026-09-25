@@ -8,13 +8,31 @@ on:
   # Allow manual triggering
   workflow_dispatch:
 
+env:
+  GCS_BUCKET: example-bucket
+  GCS_FILE_PATH: raw/input.csv
+  GCP_PROJECT_ID: example-project
+
 jobs:
   process-data:
     runs-on: ubuntu-latest
     
+    permissions:
+      contents: read
+      id-token: write
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+      
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
       
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -29,6 +47,9 @@ jobs:
       - name: Run data processing pipeline
         run: |
           python process_data.py
+        env:
+          GCS_BUCKET: ${{ env.GCS_BUCKET }}
+          GCS_FILE_PATH: ${{ env.GCS_FILE_PATH }}
       
       - name: Pipeline completed
         run: echo "✅ Data processing pipeline completed successfully at $(date)"
