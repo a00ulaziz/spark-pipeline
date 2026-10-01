@@ -53,4 +53,5 @@ jobs:
           gh pr merge "$PR_NUMBER" \
             --repo "$REPOSITORY" \
             --auto \
+            --match-head-commit "$HEAD_SHA" \
             --squash
